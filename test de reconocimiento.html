@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tarea de Reconocimiento Visual</title>
+    <style>
+        :root {
+            --bg-primary: #0f0d15;
+            --bg-secondary: #1a1625;
+            --bg-card: #241e33;
+            --accent: #8b5cf6;
+            --accent-hover: #7c3aed;
+            --pre-color: #ef4444;
+            --gray-color: #9ca3af;
+            --post-color: #3b82f6;
+            --learn-color: #14b8a6;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border: #332b47;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 780px;
+        }
+
+        .panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2.25rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+            text-align: center;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            text-align: center;
+            margin-bottom: 1.75rem;
+            line-height: 1.5;
+        }
+
+        .rules-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .rule-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .rule-number {
+            background: rgba(139, 92, 246, 0.15);
+            color: var(--accent);
+            font-weight: 700;
+            font-size: 0.9rem;
+            min-width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 2px;
+        }
+
+        .rule-content h3 {
+            font-size: 0.95rem;
+            margin-bottom: 0.25rem;
+            color: var(--text-main);
+        }
+
+        .rule-content p {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .kbd {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 0.1rem 0.4rem;
+            font-family: monospace;
+            font-size: 0.82rem;
+            color: var(--text-main);
+        }
+
+        button {
+            padding: 0.9rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s, opacity 0.2s, transform 0.1s;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #2e2640;
+        }
+
+        /* Pantalla del Experimento */
+        .experiment-screen {
+            position: fixed;
+            inset: 0;
+            background: #808080;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            user-select: none;
+        }
+
+        .hud-top {
+            position: fixed;
+            top: 1.25rem;
+            left: 1.5rem;
+            right: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            color: #111827;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .stimulus-box {
+            width: 340px;
+            height: 340px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stimulus-box img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .fixation-cross {
+            font-size: 2.75rem;
+            color: #111827;
+            font-weight: 300;
+        }
+
+        .countdown-number {
+            font-size: 4.5rem;
+            font-weight: 700;
+            color: #111827;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+
+        .countdown-label {
+            font-size: 0.95rem;
+            color: #1f2937;
+            font-weight: 600;
+        }
+
+        .response-controls {
+            position: fixed;
+            bottom: 3rem;
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .resp-btn {
+            padding: 0.9rem 2rem;
+            font-size: 1rem;
+            border-radius: 8px;
+            background: #1f2937;
+            color: white;
+            border: 2px solid transparent;
+        }
+
+        .resp-btn.active {
+            border-color: #facc15;
+            transform: scale(0.97);
+        }
+
+        /* Modal de Palabra Única */
+        .verbal-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 13, 21, 0.92);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 1rem;
+        }
+
+        .verbal-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 440px;
+            width: 100%;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .verbal-card input {
+            padding: 0.8rem;
+            border-radius: 8px;
+            border: 2px solid var(--border);
+            background: var(--bg-card);
+            color: white;
+            font-size: 1.15rem;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .verbal-card input:focus {
+            border-color: var(--accent);
+        }
+
+        .input-hint {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            min-height: 1.2em;
+        }
+
+        .input-hint.warn {
+            color: #fbbf24;
+        }
+
+        /* Resultados */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.75rem;
+        }
+
+        @media (max-width: 650px) {
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .metric-card {
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 1.25rem;
+            border-top: 4px solid var(--border);
+        }
+
+        .metric-card.pre { border-top-color: var(--pre-color); }
+        .metric-card.gray { border-top-color: var(--gray-color); }
+        .metric-card.post { border-top-color: var(--post-color); }
+
+        .metric-title {
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 0.4rem;
+        }
+
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.2rem;
+        }
+
+        .metric-sub {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+            margin-bottom: 1.75rem;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        /* Sección explicativa del artículo al final */
+        .study-summary {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--accent);
+            border-radius: 8px;
+            padding: 1.35rem 1.5rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #d1d5db;
+        }
+
+        .study-summary h3 {
+            font-size: 1rem;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+        }
+
+        .study-summary p {
+            margin-bottom: 0.75rem;
+        }
+
+        .study-summary a {
+            color: #a78bfa;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            word-break: break-all;
+        }
+
+        .study-summary a:hover {
+            text-decoration: underline;
+            color: #c4b5fd;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- PANTALLA DE INSTRUCCIONES -->
+        <section id="introSection" class="panel">
+            <h1>Tarea de Reconocimiento Visual</h1>
+            <p class="subtitle">Lee atentamente las instrucciones antes de iniciar la prueba.</p>
+
+            <div class="rules-grid">
+                <div class="rule-card">
+                    <div class="rule-number">1</div>
+                    <div class="rule-content">
+                        <h3>Observa cada imagen con atención</h3>
+                        <p>Mantén la vista en la cruz central (<span class="kbd">+</span>). Aparecerán imágenes brevemente durante <strong>medio segundo</strong> seguidas de una pausa corta.</p>
+                    </div>
+                </div>
+
+                <div class="rule-card">
+                    <div class="rule-number">2</div>
+                    <div class="rule-content">
+                        <h3>Responde si logras identificar qué aparece</h3>
+                        <p>Presiona <strong>Sí</strong> (tecla <span class="kbd">S</span> o <span class="kbd">←</span>) únicamente si distingues con claridad qué muestra la imagen. Presiona <strong>No</strong> (tecla <span class="kbd">N</span> o <span class="kbd">→</span>) si no logras reconocerlo.</p>
+                    </div>
+                </div>
+
+                <div class="rule-card">
+                    <div class="rule-number">3</div>
+                    <div class="rule-content">
+                        <h3>Responde de forma rápida y honesta</h3>
+                        <p>Se registra tu tiempo de reacción. En ciertas ocasiones, tras indicar que reconoces una imagen, el sistema te pedirá escribir <strong>una sola palabra</strong> para confirmar lo que viste.</p>
+                    </div>
+                </div>
+            </div>
+
+            <button id="startBtn" class="btn-primary">Listo para comenzar</button>
+        </section>
+
+        <!-- PANTALLA DE RESULTADOS -->
+        <section id="resultsSection" class="panel hidden">
+            <h1>Resultados de la Sesión</h1>
+            <p class="subtitle">Comparación de tu rendimiento frente a los datos del estudio original</p>
+
+            <div class="metrics-grid">
+                <div class="metric-card pre">
+                    <div class="metric-title">Mooney Pre-Aprendizaje</div>
+                    <div class="metric-value" id="resPreAcc">0%</div>
+                    <div class="metric-sub" id="resPreRt">RT Mediana: -- ms</div>
+                    <div class="metric-sub" style="margin-top: 4px; font-size: 0.75rem;">Estudio: 4% | RT: 600 ms</div>
+                </div>
+                <div class="metric-card gray">
+                    <div class="metric-title">Escala de Grises</div>
+                    <div class="metric-value" id="resGrayAcc">0%</div>
+                    <div class="metric-sub" id="resGrayRt">RT Mediana: -- ms</div>
+                    <div class="metric-sub" style="margin-top: 4px; font-size: 0.75rem;">Estudio: 93% | RT: 480 ms</div>
+                </div>
+                <div class="metric-card post">
+                    <div class="metric-title">Mooney Post-Aprendizaje</div>
+                    <div class="metric-value" id="resPostAcc">0%</div>
+                    <div class="metric-sub" id="resPostRt">RT Mediana: -- ms</div>
+                    <div class="metric-sub" style="margin-top: 4px; font-size: 0.75rem;">Estudio: 83% | RT: 530 ms</div>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Estímulo Seleccionado</th>
+                        <th>Pre-Aprendizaje</th>
+                        <th>Secuencia Aprendizaje</th>
+                        <th>Post-Aprendizaje</th>
+                        <th>Palabra Registrada</th>
+                    </tr>
+                </thead>
+                <tbody id="detailTableBody"></tbody>
+            </table>
+
+            <!-- EXPLICACIÓN BREVE DEL ARTÍCULO -->
+            <div class="study-summary">
+                <h3>Sobre este experimento: Aprendizaje perceptivo rápido</h3>
+                <p>
+                    Las imágenes en blanco y negro de alto contraste que acabas de ver se conocen como <strong>imágenes de Mooney</strong>. Al principio parecen manchas abstractas (solo el 4% se reconoce en el estudio original), pero basta con ver una sola vez la fotografía original en escala de grises para que el cerebro reorganice la figura y la vuelva reconocible al instante (saltando al 83% de acierto).
+                </p>
+                <p>
+                    En el estudio de Armendariz et al. (<em>Nature Neuroscience</em>, 2026), los investigadores registraron la actividad de 1,104 neuronas individuales en el cerebro humano y demostraron que este aprendizaje ocurre mediante <strong>procesamiento recurrente en la corteza occipital</strong> (que tarda ~125 ms adicionales en reconstruir el objeto) antes de enviar la identidad ya resuelta al lóbulo temporal medial.
+                </p>
+                <a href="https://www.nature.com/articles/s41593-026-02496-6" target="_blank" rel="noopener noreferrer">
+                    Leer el artículo completo en Nature Neuroscience: https://www.nature.com/articles/s41593-026-02496-6 ↗
+                </a>
+            </div>
+
+            <button id="restartBtn" class="btn-secondary" style="width: 100%;">Volver al inicio</button>
+        </section>
+    </div>
+
+    <!-- PANTALLA DE EJECUCIÓN -->
+    <div id="experimentScreen" class="experiment-screen hidden">
+        <div class="hud-top">
+            <span id="trialCounter">Preparando...</span>
+            <span>Fija la mirada en el centro</span>
+        </div>
+
+        <div class="stimulus-box">
+            <div id="countdownBox" class="hidden" style="text-align: center;">
+                <div id="countdownNumber" class="countdown-number">3</div>
+                <div class="countdown-label">Prepárate...</div>
+            </div>
+            <span id="fixationCross" class="fixation-cross hidden">+</span>
+            <img id="stimulusImg" class="hidden" alt="Estímulo">
+        </div>
+
+        <div id="responseControls" class="response-controls">
+            <button id="btnYes" class="resp-btn">Sí [S / ←]</button>
+            <button id="btnNo" class="resp-btn">No [N / →]</button>
+        </div>
+    </div>
+
+    <!-- MODAL DE VERIFICACIÓN EN UNA SOLA PALABRA -->
+    <div id="verbalModal" class="verbal-modal hidden">
+        <div class="verbal-card">
+            <h3>Confirmación</h3>
+            <p style="font-size: 0.88rem; color: var(--text-muted);">
+                Escribe <strong>una sola palabra</strong> (sin espacios intermedios) que identifique lo que viste en la imagen:
+            </p>
+            <input type="text" id="verbalInput" placeholder="Escribe una palabra..." autocomplete="off" spellcheck="false">
+            <div id="inputHint" class="input-hint">Solo se permite una palabra.</div>
+            <button id="verbalSubmitBtn" class="btn-primary">Confirmar</button>
+        </div>
+    </div>
+
+    <script>
+        const RUTA_IMAGENES = "./";
+
+        const ESTIMULOS_DB = [
+            {
+                id: 1,
+                nombreOficial: "Francotirador",
+                grayBase: "imagen1gris",
+                mooneyBase: "imagen1mooney",
+                extPreferida: "jpg",
+                bancoPalabras: [
+                    "francotirador", "tirador", "soldado", "militar", "sniper", "cazador",
+                    "rifle", "fusil", "arma", "escopeta", "carabina", "mirilla", "mira",
+                    "apuntando", "disparando", "hombre", "persona", "guerrero", "combatiente",
+                    "ejercito", "tropa", "infanteria", "comando", "mercenarios", "mercenario",
+                    "gorra", "bigote", "telescopica"
+                ]
+            },
+            {
+                id: 2,
+                nombreOficial: "Gorila",
+                grayBase: "imagen2gris",
+                mooneyBase: "imagen2mooney",
+                extPreferida: "jpg",
+                bancoPalabras: [
+                    "gorila", "mono", "simio", "primate", "orangutan", "chimpance",
+                    "kingkong", "kong", "changos", "chango", "macaco", "babuino",
+                    "espalda", "selva", "animal", "bestia", "monito", "gorilas"
+                ]
+            },
+            {
+                id: 3,
+                nombreOficial: "Caracol",
+                grayBase: "imagen3gris",
+                mooneyBase: "imagen3mooney",
+                extPreferida: "jpg",
+                bancoPalabras: [
+                    "caracol", "babosa", "molusco", "gasteropodo", "concha", "caparazon",
+                    "espiral", "churo", "caracolito", "bicho", "animal", "antenas",
+                    "lechuga", "hoja", "jardin", "babosita"
+                ]
+            },
+            {
+                id: 4,
+                nombreOficial: "Elefante",
+                grayBase: "imagen4gris",
+                mooneyBase: "imagen4mooney",
+                extPreferida: "png",
+                bancoPalabras: [
+                    "elefante", "elefantito", "cria", "paquidermo", "mamut", "trompa",
+                    "orejas", "orejon", "dumbo", "animal", "sabana", "africa",
+                    "elefanta", "bebeelefante", "colmillos"
+                ]
+            },
+            {
+                id: 5,
+                nombreOficial: "Churrasco",
+                grayBase: "imagen5gris",
+                mooneyBase: "imagen5mooney",
+                extPreferida: "jpg",
+                bancoPalabras: [
+                    "churrasco", "parrillada", "carne", "asado", "carnita", "comida",
+                    "platillo", "plato", "banquete", "almuerzo", "cena", "chorizo",
+                    "longaniza", "salchicha", "elote", "maiz", "tortilla", "tortillas",
+                    "guacamol", "guacamole", "chirmol", "salsa", "cebollin", "cebollas",
+                    "platano", "platanos", "frijoles", "ensalada", "festin", "parrilla"
+                ]
+            }
+        ];
+
+        const STIM_DURATION_MS = 500;
+        const ITI_DURATION_MS = 1300;
+        const REPS_PER_PHASE = 2;
+
+        const resolvedAssets = {};
+        let sessionStimuli = [];
+        let trialQueue = [];
+        let currentTrialIndex = 0;
+        let trialResults = [];
+        let verbalConfirmed = {};
+        let recordedWords = {};
+
+        let stimulusOnsetTime = 0;
+        let currentResponse = null;
+        let currentRT = null;
+        let trialTimer = null;
+        let stimOffTimer = null;
+        let isAwaitingVerbal = false;
+        let isCountingDown = false;
+
+        const introSection = document.getElementById('introSection');
+        const resultsSection = document.getElementById('resultsSection');
+        const experimentScreen = document.getElementById('experimentScreen');
+        const startBtn = document.getElementById('startBtn');
+
+        const trialCounter = document.getElementById('trialCounter');
+        const countdownBox = document.getElementById('countdownBox');
+        const countdownNumber = document.getElementById('countdownNumber');
+        const fixationCross = document.getElementById('fixationCross');
+        const stimulusImg = document.getElementById('stimulusImg');
+        const responseControls = document.getElementById('responseControls');
+        const btnYes = document.getElementById('btnYes');
+        const btnNo = document.getElementById('btnNo');
+
+        const verbalModal = document.getElementById('verbalModal');
+        const verbalInput = document.getElementById('verbalInput');
+        const inputHint = document.getElementById('inputHint');
+        const verbalSubmitBtn = document.getElementById('verbalSubmitBtn');
+
+        function tryLoadImage(baseName, preferredExt) {
+            const extensions = [preferredExt, 'jpg', 'png', 'jpeg', 'webp'].filter((v, i, a) => a.indexOf(v) === i);
+            return new Promise((resolve) => {
+                let idx = 0;
+                function attempt() {
+                    if (idx >= extensions.length) {
+                        resolve(`${RUTA_IMAGENES}${baseName}.${preferredExt}`);
+                        return;
+                    }
+                    const url = `${RUTA_IMAGENES}${baseName}.${extensions[idx]}`;
+                    const img = new Image();
+                    img.onload = () => resolve(url);
+                    img.onerror = () => {
+                        idx++;
+                        attempt();
+                    };
+                    img.src = url;
+                }
+                attempt();
+            });
+        }
+
+        const preloadPromise = (async function preloadAllAssets() {
+            for (const item of ESTIMULOS_DB) {
+                const [grayUrl, mooneyUrl] = await Promise.all([
+                    tryLoadImage(item.grayBase, item.extPreferida),
+                    tryLoadImage(item.mooneyBase, item.extPreferida)
+                ]);
+                resolvedAssets[item.id] = { grayUrl, mooneyUrl };
+            }
+        })();
+
+        verbalInput.addEventListener('input', (e) => {
+            let val = e.target.value;
+            val = val.replace(/^\s+/, '');
+
+            if (/\s+\S/.test(val)) {
+                val = val.split(/\s+/)[0];
+                inputHint.textContent = "Solo se permite una palabra (espacios intermedios bloqueados).";
+                inputHint.classList.add('warn');
+            } else {
+                val = val.replace(/\s{2,}$/, ' ');
+                inputHint.textContent = "Presiona Enter para confirmar.";
+                inputHint.classList.remove('warn');
+            }
+
+            e.target.value = val;
+        });
+
+        function normalizeSpanishWord(str) {
+            return str
+                .trim()
+                .toLowerCase()
+                .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                .replace(/[^a-zñ]/g, "")
+                .replace(/v/g, "b")
+                .replace(/z/g, "s")
+                .replace(/ce/g, "se")
+                .replace(/ci/g, "si")
+                .replace(/k/g, "c")
+                .replace(/qu/g, "c")
+                .replace(/h/g, "");
+        }
+
+        function levenshteinDistance(a, b) {
+            const matrix = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+            for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
+
+            for (let i = 1; i <= a.length; i++) {
+                for (let j = 1; j <= b.length; j++) {
+                    const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+                    matrix[i][j] = Math.min(
+                        matrix[i - 1][j] + 1,
+                        matrix[i][j - 1] + 1,
+                        matrix[i - 1][j - 1] + cost
+                    );
+                }
+            }
+            return matrix[a.length][b.length];
+        }
+
+        function isWordMatch(userInput, targetList) {
+            const rawClean = userInput.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            if (rawClean.length < 3) return false;
+
+            const normUser = normalizeSpanishWord(rawClean);
+
+            for (const candidate of targetList) {
+                const normCand = normalizeSpanishWord(candidate);
+                if (normUser === normCand) return true;
+
+                const maxLen = Math.max(normUser.length, normCand.length);
+                const dist = levenshteinDistance(normUser, normCand);
+                const similarity = 1 - (dist / maxLen);
+
+                if (similarity >= 0.78) return true;
+            }
+            return false;
+        }
+
+        function buildTrialSequence() {
+            const count = Math.floor(Math.random() * 2) + 4; // 4 o 5 estímulos
+            const pool = [...ESTIMULOS_DB];
+            shuffleArray(pool);
+            sessionStimuli = pool.slice(0, count);
+
+            const queue = [];
+
+            let preTrials = [];
+            for (let r = 0; r < REPS_PER_PHASE; r++) {
+                sessionStimuli.forEach(item => {
+                    preTrials.push({
+                        id: item.id,
+                        condition: 'pre',
+                        imgUrl: resolvedAssets[item.id].mooneyUrl
+                    });
+                });
+            }
+            shuffleArray(preTrials);
+            queue.push(...preTrials);
+
+            const learningOrder = [...sessionStimuli];
+            shuffleArray(learningOrder);
+            learningOrder.forEach(item => {
+                queue.push({
+                    id: item.id,
+                    condition: 'learning_gray',
+                    imgUrl: resolvedAssets[item.id].grayUrl
+                });
+                queue.push({
+                    id: item.id,
+                    condition: 'learning_mooney',
+                    imgUrl: resolvedAssets[item.id].mooneyUrl
+                });
+            });
+
+            let postTrials = [];
+            for (let r = 0; r < REPS_PER_PHASE; r++) {
+                sessionStimuli.forEach(item => {
+                    postTrials.push({
+                        id: item.id,
+                        condition: 'post',
+                        imgUrl: resolvedAssets[item.id].mooneyUrl
+                    });
+                    postTrials.push({
+                        id: item.id,
+                        condition: 'gray',
+                        imgUrl: resolvedAssets[item.id].grayUrl
+                    });
+                });
+            }
+            shuffleArray(postTrials);
+            queue.push(...postTrials);
+
+            return queue;
+        }
+
+        function shuffleArray(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+        }
+
+        function startCountdown(seconds, onComplete) {
+            isCountingDown = true;
+            let remaining = seconds;
+
+            trialCounter.textContent = "Iniciando en breve";
+            fixationCross.classList.add('hidden');
+            stimulusImg.classList.add('hidden');
+            responseControls.classList.add('hidden');
+            countdownBox.classList.remove('hidden');
+            countdownNumber.textContent = remaining;
+
+            const interval = setInterval(() => {
+                remaining--;
+                if (remaining > 0) {
+                    countdownNumber.textContent = remaining;
+                } else {
+                    clearInterval(interval);
+                    countdownBox.classList.add('hidden');
+                    responseControls.classList.remove('hidden');
+                    isCountingDown = false;
+                    onComplete();
+                }
+            }, 1000);
+        }
+
+        startBtn.addEventListener('click', async () => {
+            startBtn.disabled = true;
+            await preloadPromise;
+            startBtn.disabled = false;
+
+            trialQueue = buildTrialSequence();
+            currentTrialIndex = 0;
+            trialResults = [];
+            verbalConfirmed = {};
+            recordedWords = {};
+
+            introSection.classList.add('hidden');
+            resultsSection.classList.add('hidden');
+            experimentScreen.classList.remove('hidden');
+
+            startCountdown(3, () => {
+                runNextTrial();
+            });
+        });
+
+        function runNextTrial() {
+            if (currentTrialIndex >= trialQueue.length) {
+                finishExperiment();
+                return;
+            }
+
+            const trial = trialQueue[currentTrialIndex];
+            currentResponse = null;
+            currentRT = null;
+            btnYes.classList.remove('active');
+            btnNo.classList.remove('active');
+
+            trialCounter.textContent = `Ensayo ${currentTrialIndex + 1} / ${trialQueue.length}`;
+
+            fixationCross.classList.add('hidden');
+            stimulusImg.src = trial.imgUrl;
+            stimulusImg.classList.remove('hidden');
+            stimulusOnsetTime = performance.now();
+
+            stimOffTimer = setTimeout(() => {
+                stimulusImg.classList.add('hidden');
+                fixationCross.classList.remove('hidden');
+            }, STIM_DURATION_MS);
+
+            trialTimer = setTimeout(() => {
+                evaluateTrial();
+            }, STIM_DURATION_MS + ITI_DURATION_MS);
+        }
+
+        function registerResponse(recognized) {
+            if (experimentScreen.classList.contains('hidden') || isAwaitingVerbal || isCountingDown) return;
+            if (currentResponse !== null) return;
+
+            currentRT = Math.round(performance.now() - stimulusOnsetTime);
+            currentResponse = recognized;
+
+            if (recognized) {
+                btnYes.classList.add('active');
+            } else {
+                btnNo.classList.add('active');
+            }
+        }
+
+        function evaluateTrial() {
+            const trial = trialQueue[currentTrialIndex];
+            const isMooney = ['pre', 'learning_mooney', 'post'].includes(trial.condition);
+
+            if (isMooney && currentResponse === true && !verbalConfirmed[trial.id]) {
+                isAwaitingVerbal = true;
+                verbalInput.value = '';
+                inputHint.textContent = "Solo se permite una palabra.";
+                inputHint.classList.remove('warn');
+                verbalModal.classList.remove('hidden');
+                verbalInput.focus();
+                return;
+            }
+
+            finalizeTrialRecord(currentResponse === true);
+        }
+
+        verbalSubmitBtn.addEventListener('click', submitVerbalWord);
+        verbalInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') submitVerbalWord();
+        });
+
+        function submitVerbalWord() {
+            const word = verbalInput.value.trim();
+            if (!word) return;
+
+            const trial = trialQueue[currentTrialIndex];
+            const stimObj = ESTIMULOS_DB.find(s => s.id === trial.id);
+            const matched = isWordMatch(word, stimObj.bancoPalabras);
+
+            if (matched) {
+                verbalConfirmed[trial.id] = true;
+                recordedWords[trial.id] = word;
+            } else if (!recordedWords[trial.id]) {
+                recordedWords[trial.id] = `${word} (✗)`;
+            }
+
+            verbalModal.classList.add('hidden');
+            isAwaitingVerbal = false;
+            finalizeTrialRecord(matched);
+        }
+
+        function finalizeTrialRecord(recognizedCorrectly) {
+            const trial = trialQueue[currentTrialIndex];
+            trialResults.push({
+                id: trial.id,
+                condition: trial.condition,
+                recognized: recognizedCorrectly,
+                rt: currentRT
+            });
+
+            currentTrialIndex++;
+            runNextTrial();
+        }
+
+        btnYes.addEventListener('click', () => registerResponse(true));
+        btnNo.addEventListener('click', () => registerResponse(false));
+
+        document.addEventListener('keydown', (e) => {
+            if (experimentScreen.classList.contains('hidden') || isAwaitingVerbal || isCountingDown) return;
+            const key = e.key.toLowerCase();
+            if (key === 's' || key === 'y' || e.key === 'ArrowLeft') {
+                registerResponse(true);
+            } else if (key === 'n' || e.key === 'ArrowRight') {
+                registerResponse(false);
+            }
+        });
+
+        function finishExperiment() {
+            experimentScreen.classList.add('hidden');
+            resultsSection.classList.remove('hidden');
+
+            const stats = {
+                pre: computeConditionStats('pre'),
+                gray: computeConditionStats('gray'),
+                post: computeConditionStats('post')
+            };
+
+            document.getElementById('resPreAcc').textContent = `${stats.pre.acc}%`;
+            document.getElementById('resPreRt').textContent = `RT Mediana: ${stats.pre.medianRt} ms`;
+
+            document.getElementById('resGrayAcc').textContent = `${stats.gray.acc}%`;
+            document.getElementById('resGrayRt').textContent = `RT Mediana: ${stats.gray.medianRt} ms`;
+
+            document.getElementById('resPostAcc').textContent = `${stats.post.acc}%`;
+            document.getElementById('resPostRt').textContent = `RT Mediana: ${stats.post.medianRt} ms`;
+
+            renderDetailTable();
+        }
+
+        function computeConditionStats(cond) {
+            const subset = trialResults.filter(r => r.condition === cond);
+            if (subset.length === 0) return { acc: 0, medianRt: '--' };
+
+            const recognizedCount = subset.filter(r => r.recognized).length;
+            const acc = Math.round((recognizedCount / subset.length) * 100);
+
+            const validRts = subset.map(r => r.rt).filter(rt => rt !== null).sort((a, b) => a - b);
+            let medianRt = '--';
+            if (validRts.length > 0) {
+                const mid = Math.floor(validRts.length / 2);
+                medianRt = validRts.length % 2 !== 0 
+                    ? validRts[mid] 
+                    : Math.round((validRts[mid - 1] + validRts[mid]) / 2);
+            }
+
+            return { acc, medianRt };
+        }
+
+        function renderDetailTable() {
+            const tbody = document.getElementById('detailTableBody');
+            tbody.innerHTML = '';
+
+            const sortedSession = [...sessionStimuli].sort((a, b) => a.id - b.id);
+
+            sortedSession.forEach(item => {
+                const pResults = trialResults.filter(r => r.id === item.id);
+                const pre = pResults.filter(r => r.condition === 'pre');
+                const learn = pResults.filter(r => r.condition === 'learning_mooney');
+                const post = pResults.filter(r => r.condition === 'post');
+
+                const prePct = pre.length ? Math.round((pre.filter(r => r.recognized).length / pre.length) * 100) : 0;
+                const learnOk = learn.some(r => r.recognized) ? '✓ Aprendida' : '✗ No identificada';
+                const postPct = post.length ? Math.round((post.filter(r => r.recognized).length / post.length) * 100) : 0;
+                const wordDisplay = recordedWords[item.id] || '—';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${item.nombreOficial}</strong> (ID ${item.id})</td>
+                    <td>${prePct}%</td>
+                    <td>${learnOk}</td>
+                    <td>${postPct}%</td>
+                    <td style="font-family: monospace;">${wordDisplay}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        document.getElementById('restartBtn').addEventListener('click', () => {
+            resultsSection.classList.add('hidden');
+            introSection.classList.remove('hidden');
+        });
+    </script>
+</body>
+</html>
